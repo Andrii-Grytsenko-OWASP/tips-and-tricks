@@ -79,3 +79,5 @@
 # uid=1000(student) gid=1000(student) 
 #
 # PrependSetuid=true
+# 
+# Remember! GDB is only for developing an exploit, but not for exploiting a target app. For exploiting do not use GDB
