@@ -1,0 +1,3 @@
+Set Intel syntax as a default
+echo 'set disassembly-flavor intel' > ~/.gdbinit
+
